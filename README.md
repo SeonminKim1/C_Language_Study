@@ -19,7 +19,7 @@
 ![추가하기](./readme_image/추가하기.PNG)
 
 #### (3) 전화번호부 출력
-![전화번호부출력](./readme_image/전화번호부출력.PNG)
+![출력하기](./readme_image/출력하기.PNG)
 
 #### (4) 전화번호부 검색
 ![검색하기](./readme_image/검색하기.PNG)

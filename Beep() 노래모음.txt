@@ -1,0 +1,168 @@
+#include <stdio.h>
+#include <windows.h>
+#pragma warning (disable:4996)
+const float Frequency[][7] = {
+	/* 계이름 도 레 미 파 솔 라 시 */
+	/* 옥타브1 */{ 32.7032f, 36.7081f, 41.2034f, 43.6535f, 48.9994f, 55.0000f, 61.7354f },
+	/* 옥타브2 */{ 65.4064f, 73.4162f, 82.4069f, 87.3071f, 97.9989f, 110.0000f, 123.4708f, },
+	/* 옥타브3 */{ 130.8128f, 146.8324f, 164.8138f, 174.6141f, 195.9977f, 220.0000f, 246.9417f, },
+	/* 옥타브4 */{ 261.6256f, 293.6648f, 329.6276f, 349.2282f, 391.9954f, 440.0000f, 493.8803f, },
+	/* 옥타브5 */{ 523.2511f, 587.3295f, 659.2551f, 698.4566f, 783.9909f, 880.0000f, 987.7666f, },
+	/* 옥타브6 */{ 1046.5020f, 1174.6590f, 1318.5100f, 1396.9130f, 1567.9820f, 1760.0000f, 1975.5330f, },
+	/* 옥타브7 */{ 2093.0050f, 2349.3180f, 2637.0200f, 2793.8260f, 3135.9630f, 3520.0000f, 3951.0660f, },
+	/* 옥타브8 */{ 4186.0090f, 4698.6360f, 5274.0410f, 5587.6520f, 6271.9270f, 7040.0000f, 7902.1330f, },
+};
+
+//템포와 음표의 길이를 이용해서 지연해야 하는 시간을 계산해준다.
+//예를 들어서 tempo가 120이고 4분음표이면 0.5초를 지연하기 위해 500을 돌려준다.
+int DelayCalc(int tempo, int delay)
+{
+	int t = 4 * 60 * 1000;
+	t /= tempo;
+	t /= delay;
+	return t;
+}
+
+//문자열로 되어 있는 악보를 연주하는 함수
+void Play(char *note)
+{
+	int tempo = 120;    //템포
+	int octave = 4;        //옥타브
+	int delay = 0;        //시간지연용
+	int delay2 = 0;        //바로 앞에서 지연했던 시간
+	char n;                //악보하나 가져오기
+	int d;                //계명뒤에 있는 숫자 가져오기
+	int f;                //계명에 해당하는 주파수
+	char pm;            //음표뒤에 오는 +나 - (Plus Minus)
+	const float *fpnt;    //주파수 데이터 포인터
+	float f1, f2;        //반음 처리용 주파수
+
+	for (; *note;) {
+		if (delay == 0) {
+			n = *note++;
+			if ((n >= 'A') && (n <= 'G')) {    //계명처리
+											   //CDEFGAB를 ABCDEFG로 변환한다.
+				fpnt = &Frequency[octave - 1][((n - 'A') + 5) % 7];
+				pm = *note;
+				if ((pm == '+') && (!((octave == 8) && (n == 'B')))) {        //반음 올리기
+					f1 = *fpnt++;
+					f2 = *fpnt;
+					if ((n == 'E') || (n == 'B')) {    //'미'와 '시'는 오른쪽 흰 건반
+						f = (int)(f2 + 0.5f);
+					}
+					else {                            //그 외에는 오른쪽 위 검은 건반
+						f2 = *fpnt;
+						f = (int)((f1 + f2) / 2 + 0.5f);
+					}
+					note++;
+				}
+				else if ((pm == '-') && (!((octave == 1) && (n == 'C')))) {        //반음 내리기
+					f1 = *fpnt--;
+					f2 = *fpnt;
+					if ((n == 'C') || (n == 'F')) {    //'도'와 '파'는 왼쪽 흰 건반
+						f = (int)(f2 + 0.5f);
+					}
+					else {                            //그 외에는 왼쪽 위 검은 건반
+						f = (int)((f1 + f2) / 2 + 0.5f);
+					}
+					note++;
+				}
+				else {
+					f = (int)(*fpnt + 0.5f);
+				}
+
+				delay = delay2;
+				d = *note;
+				if ((d >= '0') && (d <= '9')) {    //계명뒤에 숫자가 있으면
+					for (delay = 0; ; note++) {
+						d = *note;
+						if ((d < '0') || (d > '9'))    break;
+						delay *= 10;
+						delay += d - '0';
+					}
+					if (d == '.') {
+						delay -= delay / 2;
+						note++;
+					}
+					delay2 = delay;
+				}
+				Beep(f, DelayCalc(tempo, delay) * 3 / 4);    //원래 음길이보다 약간 짧게 연주한다.
+			}
+			else if (n == 'T') {    //템포 정하기
+				tempo = 0;
+				for (;;) {
+					d = *note;
+					if ((d < '0') || (d > '9'))    break;
+					tempo *= 10;
+					tempo += d - '0';
+					note++;
+				}
+			}
+			else if (n == 'O') {    //옥타브 정하기
+				d = *note++;
+				if ((d >= '1') && (d <= '8')) {
+					octave = d - '0';
+				}
+			}
+			else if (n == 'R') {    //쉼표처리
+				for (delay = 0; ; note++) {
+					d = *note;
+					if ((d < '0') || (d > '9'))    break;
+					delay *= 10;
+					delay += d - '0';
+				}
+				if (d == '.') {
+					delay -= delay / 2;
+					note++;
+				}
+				delay2 = delay;
+			}
+		}
+		else {
+			Sleep(DelayCalc(tempo, delay));
+			delay = 0;
+		}
+	}
+}
+
+int main(int argc, char *argv[])
+{
+	//악보데이터 기록 방법
+	//1. 템포와 쉼표 뒤에는 반드시 숫자가 와야 됩니다. 템포를 생략하면 120입니다.
+	//2. 계명뒤에는 음표길이가 생략되면 이전 길이를 사용합니다. 맨 처음에는 생략하면 안 됩니다.
+	//3. 숫자뒤에 '.'을 사용하면 숫자의 반이 더해집니다. 악보에서의 점과 같습니다.
+	//4. 옥타브의 지정은 O를 사용하고 반드시 O뒤에 1부터 8까지의 숫자 하나를 반드시 지정해야 됩니다.
+	//5. 반음을 올릴 때에는 계명뒤에 '+'를 사용하고, 반음을 내릴 때에는 '-'를 사용합니다.
+
+	//악보 - 학교종이
+	char TitleSchoolBell[] = "학교종이";
+	char NoteSchoolBell[] = "T220O4G4GAAGGE2G4GEED2. R4GGAAGGE2G4EDEC2.R4";
+	//악보 - 햇볕은 쨍쨍
+	char TitleSunLight[] = "햇볕은 쨍쨍";
+	char NoteSunLight[] = "T180C8.E16G4GG E8FGEC4C O5C8O4BO5CO4AGAGE O5CO4BO5CO4AGAGE AAGGEEGG D8.C16D8EC4C";
+	//악보 - 노을
+	char TitleGlow[] = "노을";
+	char NoteGlow[] = "T180O4E8.C+16DF+E8.C+16DF+E4E8C+4. D8.E16O3BO4C+D8.E16G+F+E8EDC+4."
+		"E8.C+16DF+E8.E16F+G+A8.G+16BAF+4. A8G+F+EAO5C+O4B8.E16G+BA4."
+		"A16.G+32A8AA8.G+16F+8EEDC+4. F+16.E+32F+8F+F+8.G+16F+8E8.D16C+16F+E4."
+		"A16.G+32A8AA8.B16O5C+8C+4.O4A4. F+8F+F+F+8.G+16AO5C+O4B2R4"
+		"E8.C+16DF+E8.C+16DF+E4E8C+4. D8.E16O3BO4C+D8.E16G+F+E8EDC+4."
+		"E8.C+16DF+E8.E16F+G+A8.G+16BAF+4. A8G+F+EAO5C+O4B8.E16G+BA4.";
+	int menu;
+
+	for (;;) {
+		printf("<1> %s\n", TitleSchoolBell);
+		printf("<2> %s\n", TitleSunLight);
+		printf("<3> %s\n", TitleGlow);
+		printf("<4> End\n");
+		printf("원하는 번호를 선택해 주십시오.");
+		scanf("%d", &menu);
+		if (menu == 1)    Play(NoteSchoolBell);
+		else if (menu == 2) Play(NoteSunLight);
+		else if (menu == 3) Play(NoteGlow);
+		else break;
+		printf("\n");
+	}
+
+	return EXIT_SUCCESS;
+}

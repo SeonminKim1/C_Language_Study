@@ -1,0 +1,43 @@
+#include <stdio.h>
+void binary2(int n)
+{
+	if (n<2)
+		printf("%d", n);
+	else
+	{
+		binary2(n / 2);
+		printf("%d", n % 2);
+
+	}
+}
+void binary8(int n)
+{
+	if (n<8)
+		printf("%d", n);
+	else
+	{
+		binary8(n / 8);
+		printf("%d", n % 8);
+
+	}
+}
+
+void binary16(int n)
+{
+	char h[] = "0123456789ABCDEF";
+	if (n<16)
+		printf("%c", h[n]);
+	else
+	{
+		binary16(n / 16);
+		printf("%c", h[n % 16]);
+	}
+}
+int main() {
+	int a = 14;
+	binary2(a);
+	printf("\n");
+	binary8(a);
+	printf("\n");
+	binary16(a);
+}

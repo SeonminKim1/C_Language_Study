@@ -1,0 +1,50 @@
+https://blog.naver.com/pok_jadan/188561749 // 관련 홈페이지
+
+GetAsyncKeyState는 현재 키가 눌려져 있는지 검사하는 것.. !!
+
+ex) 
+
+if(GetAsyncKeyState(VK_LEFT) && VK_RIGHT) // 둘다 눌려져 있는지 검사.
+
+***********쓰는이유 ********* 
+<- -> 이런키들은 getch() 두번써야되는데 그러지 않고, 
+getAsyncKeyState는 한번만 쓸 수 이씀.
+
+두개의 키를 동시에 누르는게 가능함.
+
+물론 define으로 SPECIAL1 선언 후 사용하는건 가능.
+kbhit()
+SPECIAL 1, SPECIAL 2 // 기존 방향키 외에 오른쪽 방향키.
+
+*************
+
+
+#include <stdio.h>
+#include <Windows.h>
+#include <conio.h>
+#pragma warning(disable:4996)
+int main() {
+	char ch;
+	while (1) {
+		Sleep(1000);
+		printf("1");
+		if (kbhit()) {
+			ch = getch();
+			if (ch == 'a') {
+				printf("kbhit a눌림");
+			}
+		}
+		if (GetAsyncKeyState(VK_LEFT)) {
+			printf("000");
+		}
+		if (GetAsyncKeyState(VK_LEFT) && GetAsyncKeyState(VK_RIGHT)) {
+			printf("둘다눌림");
+		}
+	}
+}
+
+// 경우 1 왼쪽키만 한번 누르면 000 나타남.
+// 경우 2 왼쪽키만 누르고 있는 경우 000 계속 나타남.
+// 경우 3 왼쪽키랑 오른쪽키 같이 누르고 있는 경우 둘다눌림 나타남.
+
+https://blog.naver.com/power2845/50143021565 // 관련 키들

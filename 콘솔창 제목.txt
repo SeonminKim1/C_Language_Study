@@ -1,0 +1,13 @@
+#include<Windows.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#include<conio.h> //콘솔창에서의 입출력 함수((CONsole Input Output.Header)
+
+
+
+int main()
+{
+SetConsoleTitle(TEXT("STUDENT GRADE MANAGE PROGRAM")); //콘솔창의 제목지정(학생성적관리프로그램)
+return 0;
+}
